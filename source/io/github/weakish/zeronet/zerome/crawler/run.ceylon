@@ -223,26 +223,37 @@ shared HubLinks crawl_links(Path hub_id_path) {
     return links;
 }
 
-"Gluing code or the real entry point."
-throws(`class NotImplementedYet`, "when `recursive` is `true`.")
-shared Hub crawl(String hub_id, Path data_dir, Boolean recursive) {
+"Gluing code or the real entry point.
+ Returns Null when `hub` is not seeded or fail to parse content.json of `hub`."
+shared Hub|Hubs|Null crawl(String hub_id, Path data_dir, Boolean recursive) {
     Path hub_id_path = data_dir.childPath(hub_id);
     Path hub_content_json = hub_id_path.childPath("content.json");
-    JsonObject content_json = load_json_object_or_throw(hub_content_json);
-
-    HubMeta hubMeta = meta(content_json);
-    HubLinks hubLinks = crawl_links(hub_id_path);
-    if (recursive) {
-        throw NotImplementedYet("Recursive crawl is not implemented yet.");
-    } else {
-        return hub_id->[hubMeta, hubLinks];
+    try {
+        if (is JsonObject content_json = load_json_object(hub_content_json)) {
+            HubMeta hubMeta = meta(content_json);
+            HubLinks hubLinks = crawl_links(hub_id_path);
+            if (recursive) {
+                return set {
+                        for (link in hubLinks)
+                        if (is Hub hub = crawl(link, data_dir, false))
+                        hub };
+            } else {
+                return hub_id->[hubMeta, hubLinks];
+            }
+        } else {
+            log.error("Failed to parse `content.json` of ``hub_id``");
+            return null;
+        }
+    } catch (FileNotFoundException e) {
+        log.warn("You are not seeding ``hub_id``. Skip it.");
+        return null;
     }
 }
 
 Logger log = logger(`module io.github.weakish.zeronet.zerome.crawler`);
 
 "Returns JsonObject for [[Hub]] and JsonArray of JsonObject for [[Hubs]]."
-shared JsonArray|JsonObject jsonify(Hubs|Hub hub) {
+shared JsonArray|JsonObject jsonify(Hubs|Hub|Null hub) {
     switch (hub)
     case (is Hub) {
         return JsonObject {
@@ -255,6 +266,9 @@ shared JsonArray|JsonObject jsonify(Hubs|Hub hub) {
     }
     case (is Hubs) {
         return JsonArray([for (_hub in hub) jsonify(_hub)]);
+    }
+    case (is Null) {
+        return JsonObject {};
     }
 }
 
