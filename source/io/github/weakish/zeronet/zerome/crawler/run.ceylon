@@ -176,6 +176,7 @@ shared File? resolve_file(Link link) {
 }
 "Resolve a path to a flie."
 see(`function resolve_file`)
+see(`function resolve_path_to_directory`)
 shared File? resolve_path_to_file(Path path) {
     switch (location = path.resource)
     case (is File) {
@@ -192,6 +193,26 @@ shared File? resolve_path_to_file(Path path) {
         return null;
     }
 }
+"Resolve a path to a direcotry."
+see(`function resolve_directory`)
+see(`function resolve_path_to_file`)
+shared Directory? resolve_path_to_directory(Path path) {
+    switch (location = path.resource)
+    case (is Directory) {
+        return location;
+    }
+    case (is Link) {
+        if (exists directory = resolve_directory(location)) {
+            return directory;
+        } else {
+            return null;
+        }
+    }
+    case (is File|Nil) {
+        return null;
+    }
+}
+
 
 throws(`class FileNotFoundException`, "`hub_id_path` does not contains `data/users`")
 Directory get_users_dir(Path hub_id_path) {
@@ -263,11 +284,11 @@ shared HubLinks crawl_links(Path hub_id_path) {
 
 "Gluing code or the real entry point.
  Returns Null when `hub` is not seeded or fail to parse content.json of `hub`."
-shared Hub|Hubs|Null crawl(String hub_id, Path data_dir, Boolean recursive) {
-    Path hub_id_path = data_dir.childPath(hub_id);
-    Path hub_content_json = hub_id_path.childPath("content.json");
-    try {
-        if (is JsonObject content_json = load_json_object(hub_content_json)) {
+shared Hub|Hubs|Null crawl(String hub_id, Directory data_dir, Boolean recursive) {
+    Path hub_id_path = data_dir.path.childPath(hub_id);
+    Path hub_content_json_path = hub_id_path.childPath("content.json");
+    if (exists content_json_file = resolve_path_to_file(hub_content_json_path)) {
+        if (is JsonObject content_json = load_json_object(content_json_file)) {
             HubMeta hubMeta = meta(content_json);
             HubLinks hubLinks = crawl_links(hub_id_path);
             if (recursive) {
@@ -282,7 +303,7 @@ shared Hub|Hubs|Null crawl(String hub_id, Path data_dir, Boolean recursive) {
             log.error("Failed to parse `content.json` of ``hub_id``");
             return null;
         }
-    } catch (FileNotFoundException e) {
+    } else {
         log.warn("You are not seeding ``hub_id``. Skip it.");
         return null;
     }
@@ -317,7 +338,7 @@ void main() {
     // DEBUG
     // defaultPriority = debug;
 
-    Path data_dir;
+    Path data_dir_path;
     String hub_id;
 
     if (process.namedArgumentPresent("h") == true) {
@@ -326,12 +347,12 @@ void main() {
         // --data_dir
         if (process.namedArgumentPresent("data_dir") == true) {
             if (exists data_dir_argument = process.namedArgumentValue("data_dir")) {
-                data_dir = parsePath(data_dir_argument);
+                data_dir_path = parsePath(data_dir_argument);
             } else {
                 throw UsageError("`--data_dir` specified without a value.");
             }
         } else {
-            data_dir = current;
+            data_dir_path = current;
         }
         // --hub
         if (process.namedArgumentPresent("hub") == true) {
@@ -347,6 +368,12 @@ void main() {
         // -r
         Boolean recursive = process.namedArgumentPresent("r");
 
+        Directory data_dir;
+        if (exists directory = resolve_path_to_directory(data_dir_path)) {
+            data_dir = directory;
+        } else {
+            throw FileNotFoundException("data_dir ``data_dir_path`` not found.");
+        }
         // output in json
         print(jsonify(crawl(hub_id, data_dir, recursive)));
     }
