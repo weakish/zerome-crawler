@@ -527,18 +527,13 @@ void main() {
 }
 
 "The utimate exception handler."
+suppressWarnings("expressionTypeNothing")
 shared void run() {
     try {
         main();
-    } catch (UsageError|NotImplementedYet e) {
+    } catch (UsageError e) {
         process.writeErrorLine(e.message);
-        switch (e)
-        case (is UsageError) {
-            process.exit(e.exit_code);
-        }
-        case (is NotImplementedYet) {
-            process.exit(e.exit_code);
-        }
+        process.exit(e.exit_code);
     } catch (LoadJsonFail e) {
         process.writeErrorLine(e.message);
         e.printStackTrace();

@@ -36,9 +36,22 @@ We prefer to declare classes for new types (or type aliases).
 
 ### Pay attention to compiler warnings
 
-[Some warnings][4285] are false positive, though.
+Also use annotation to suppress false positive warnings.
 
-[4285]: https://github.com/ceylon/ceylon/issues/4285#issuecomment-156661485
+For example:
+
+```ceylon
+"The utimate exception handler."
+suppressWarnings("expressionTypeNothing")
+shared void run() {
+    try {
+        main();
+    } catch (UsageError e) {
+        process.writeErrorLine(e.message);
+        process.exit(e.exit_code);
+    }
+}
+```
 
 ### Other
 
