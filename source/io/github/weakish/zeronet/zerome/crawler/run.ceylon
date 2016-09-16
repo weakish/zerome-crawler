@@ -150,12 +150,6 @@ shared alias Hub => Entry<String, [HubMeta, HubLinks]>;
 "A set of [[Hub]]s."
 shared alias Hubs => Set<Hub>;
 
-"exit_codo 70 a.k.a internal software error (sysexits.h)"
-shared class NotImplementedYet(String message) extends UnsupportedOperationException(message) {
-    "`ex_software` i.e. internal software error (sysexits.h)"
-    shared Integer exit_code = 70;
-}
-
 "Resolve a link to direcotry."
 see(`function resolve_file`)
 shared Directory? resolve_directory(Link link) {
