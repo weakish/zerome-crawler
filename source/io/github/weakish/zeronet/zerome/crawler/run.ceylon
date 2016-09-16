@@ -69,15 +69,6 @@ shared JsonObject? load_json_object(Path path) {
     }
 }
 
-"Wraps [[load_json_object]]."
-throws(`class LoadJsonFail`, "if parsed result of file is not JsonObject")
-shared JsonObject load_json_object_or_throw(Path path) {
-    if (exists json = load_json_object(path)) {
-        return json;
-    } else {
-        throw LoadJsonFail(path);
-    }
-}
 "When failed to parse a string as json object."
 shared class LoadJsonFail(Path data) extends Exception(data.string) {
     "`ex_dataerr` i.e. data format error (sysexits.h)"
