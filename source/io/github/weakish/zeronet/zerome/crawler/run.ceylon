@@ -456,9 +456,10 @@ void main() {
     Boolean help_option = process.namedArgumentPresent("help");
     Boolean help_option_short = process.namedArgumentPresent("h");
     if (help_option == true || help_option_short == true) {
-        print("""Usage: java -jar zerome-crawler.jar -h|--help
-                                                     --all [--list-only] [--data_dir PATH] [--user_registry ID]
-                                                     [-r] [--hub ID] [--data_dir PATH]""");
+        print("""Usage:
+                 java -jar zerome-crawler.jar -h|--help
+                                              --all [--list-only] [-1] [--data_dir PATH] [--user_registry ID]
+                                              [-r] [--hub ID] [--data_dir PATH]""");
     } else {
         // --data_dir
         if (process.namedArgumentPresent("data_dir") == true) {
@@ -485,8 +486,10 @@ void main() {
         }
         // --all
         Boolean all = process.namedArgumentPresent("all");
-        // -l
+        // --list-only
         Boolean list_only = process.namedArgumentPresent("list-only");
+        // -1
+        Boolean one_pre_line = process.namedArgumentPresent("1");
         // --user_registry
         String zerome_user_registry = "1UDbADib99KE9d3qZ87NqJF2QLTHmMkoV";
         if (process.namedArgumentPresent("user_registry") == true) {
@@ -507,7 +510,15 @@ void main() {
         // output in json
         switch (all)
         case (true) {
-            print(jsonify(crawl_all(data_dir, user_registry, list_only)));
+            switch (one_pre_line)
+            case (true) {
+                for (hub_link in crawl_all(data_dir, user_registry, true)) {
+                    print(hub_link);
+                }
+            }
+            case (false) {
+                print(jsonify(crawl_all(data_dir, user_registry, list_only)));
+            }
         }
         case (false) {
             print(jsonify(crawl(hub_id, data_dir, recursive)));

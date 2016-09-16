@@ -31,17 +31,25 @@
    java -jar zerome-crawler.jar --hub 1RedkCkVaXuVXrqCMpoXQS29bwaqsuFdL
    ```
 
+   Crawl all hubs, the data dir is `/var/zeronet/data`:
+
+   ```sh
+   java -jar zerome-crawler.jar --all --data_dir /var/zeronet/data
+   ```
    List all hubs where at least one user has registered.
 
    ```sh
    java -jar zerome-crawler.jar --all --list-only
    ```
 
-   Crawl all hubs, the data dir is `/var/zeronet/data`:
+   Backup all seeding hubs where at least one user has registered,
+   assuming the current directory is `data_dir`:
 
    ```sh
-   java -jar zerome-crawler.jar --all --data_dir /var/zeronet/data
-   ```
+   git init
+   java -jar zerome-crawler.jar --all -1 | xargs git add
+   # `1` lists one hub_id per line. It implies `list-only`.
+   git commit -m 'Auto snapshot of ZeroMe Hubs.'
    """
 by("Jakukyo Friel")
 license("0BSD")
