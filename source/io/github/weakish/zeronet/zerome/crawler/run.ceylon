@@ -162,8 +162,18 @@ Directory get_users_dir(Path hub_id_path) {
     case (is Directory) {
         return users_dir;
     }
-    case (is File|Link|Nil){
-        throw FileNotFoundException("``hub_id_path``/data/users");
+    case (is Link) {
+        switch (resolved_link = users_dir.linkedResource)
+        case (is Directory) {
+            return resolved_link;
+        }
+        case (is File|Nil) {
+            throw FileNotFoundException("``hub_id_path`` links to ``resolved_link``,
+                                         under which there is no `/data/users/`");
+        }
+    }
+    case (is File|Nil){
+        throw FileNotFoundException("``hub_id_path``/data/users/");
     }
 }
 
