@@ -1,5 +1,7 @@
 Send pull requests at <https://github.com/weakish/shattr>.
 
+Sign your commit with `--gpg-sign` is preferred, but not required.
+
 Coding style
 ------------
 
