@@ -20,9 +20,8 @@ import ceylon.logging {
     Logger,
     addLogWriter,
     writeSimpleLog,
-    logger,
-    debug,
-    defaultPriority
+    // defaultPriority,
+    logger
 }
 import ceylon.test {
     test,
