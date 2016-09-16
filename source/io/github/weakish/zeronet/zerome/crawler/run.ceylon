@@ -156,6 +156,29 @@ shared class NotImplementedYet(String message) extends UnsupportedOperationExcep
     shared Integer exit_code = 70;
 }
 
+"Resolve a link to direcotry."
+see(`function resolve_file`)
+shared Directory? resolve_directory(Link link) {
+    switch (resolved_link = link.linkedResource)
+    case (is Directory) {
+        return resolved_link;
+    }
+    case (is File|Nil) {
+        return null;
+    }
+}
+"Resolve a link to direcotry."
+see(`function resolve_directory`)
+shared File? resolve_file(Link link) {
+    switch (resolved_link = link.linkedResource)
+    case (is File) {
+        return resolved_link;
+    }
+    case (is Directory|Nil) {
+        return null;
+    }
+}
+
 throws(`class FileNotFoundException`, "`hub_id_path` does not contains `data/users`")
 Directory get_users_dir(Path hub_id_path) {
     switch (users_dir = hub_id_path.childPath("data").childPath("users").resource)
@@ -163,13 +186,14 @@ Directory get_users_dir(Path hub_id_path) {
         return users_dir;
     }
     case (is Link) {
-        switch (resolved_link = users_dir.linkedResource)
-        case (is Directory) {
+        if (exists resolved_link = resolve_directory(users_dir)) {
             return resolved_link;
-        }
-        case (is File|Nil) {
-            throw FileNotFoundException("``hub_id_path`` links to ``resolved_link``,
-                                         under which there is no `/data/users/`");
+        } else {
+            throw FileNotFoundException(
+                "``hub_id_path`` is a link,
+                 either the link is broken, or there is no `/data/users/` under its target.
+                "
+            );
         }
     }
     case (is File|Nil){
