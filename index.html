@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640">
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Zerome-crawler by weakish</title>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/weakish/zerome-crawler">View on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Zerome-crawler</h1>
+            <h2>A module to crawl zerome hubs.</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/weakish/zerome-crawler/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/weakish/zerome-crawler/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
+        <p>A module to crawl zerome hubs.</p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>See <a href="https://weakish.github.io/zerome-crawler">https://weakish.github.io/zerome-crawler</a></p>
+
+<h2>
+<a id="install" class="anchor" href="#install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install</h2>
+
+<h3>
+<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dependencies</h3>
+
+<p>Java 7+</p>
+
+<p>It does not depend on <code>zeronet.py</code>.
+So you can copy ZeroHub files from other machines.</p>
+
+<p>Also, it will not modify ZeroHub directory.</p>
+
+<h3>
+<a id="as-a-library" class="anchor" href="#as-a-library" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>As a library</h3>
+
+<h4>
+<a id="with-java" class="anchor" href="#with-java" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>With Java</h4>
+
+<p>Download the jar file at <a href="https://github.com/weakish/zerome-crawler/releases">Releases</a> page and put it in <code>classpath</code>.</p>
+
+<h4>
+<a id="with-ceylon" class="anchor" href="#with-ceylon" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>With Ceylon</h4>
+
+<p>Download the car file at <a href="https://github.com/weakish/zerome-crawler/releases">Releases</a> page and put it in ceylon module repository.</p>
+
+<h3>
+<a id="as-a-command-line-tool" class="anchor" href="#as-a-command-line-tool" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>As a command line tool</h3>
+
+<p>Download the jar file at <a href="https://github.com/weakish/zerome-crawler/releases">Releases</a> page and rename it to <code>zerome-crawler.jar</code>
+or anything you like.</p>
+
+<h2>
+<a id="development" class="anchor" href="#development" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Development</h2>
+
+<p>You need Ceylon, unless you want to mess up with decompiled Java code.</p>
+
+<p>Tested on Ceylon 1.2.2, may work with other versions.</p>
+
+<p>If you need to modify the source, clone this repository with git.</p>
+
+<p>If you do not want to use git,
+download the tarball, zip or car file at <a href="https://github.com/weakish/zerome-crawler/releases">Releases</a>.</p>
+
+<h3>
+<a id="makefile" class="anchor" href="#makefile" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Makefile</h3>
+
+<p>There is a <code>Makefile</code> in the repository, compatible with both BSD and GNU <code>make</code>.</p>
+
+<h4>
+<a id="test" class="anchor" href="#test" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Test</h4>
+
+<div class="highlight highlight-source-shell"><pre>make <span class="pl-c1">test</span></pre></div>
+
+<h4>
+<a id="compile" class="anchor" href="#compile" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Compile</h4>
+
+<pre><code>make build
+</code></pre>
+
+<h4>
+<a id="package" class="anchor" href="#package" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Package</h4>
+
+<p>Packages to a fat jar (requires <code>ceylon</code> 1.2.3 snapshot)</p>
+
+<div class="highlight highlight-source-shell"><pre>make jar</pre></div>
+
+<h3>
+<a id="contribute" class="anchor" href="#contribute" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contribute</h3>
+
+<p>See <code>CONTRIBUTING.md</code> in the repository.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>0BSD</p>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/weakish">weakish</a> can be found on <a href="https://github.com/weakish/zerome-crawler">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="https://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+
+    
+  </body>
+</html>
