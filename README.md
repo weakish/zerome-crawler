@@ -3,7 +3,7 @@ A module to crawl zerome hubs.
 Usage
 -----
 
-See <https://weakish.github.io/zerome-crawler>
+See <https://weakish.github.io/zerome-crawler/api/>
 
 Install
 -------
