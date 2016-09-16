@@ -207,7 +207,7 @@ shared HubLinks crawl_links(Path hub_id_path) {
                         }
                     }
                 } else {
-                    log.warn(() => "`data.json` in ``user_dir`` does not have a `follow` field.");
+                    log.info(() => "``user_dir`` is not following any one.");
                 }
             } else {
                 log.error(() => "Failed to parse `data.json` file in ``user_dir``.");
