@@ -246,6 +246,45 @@ Directory get_users_dir(Path hub_id_path) {
     return users_dir.childPaths().filter((path) => path.resource is Directory);
 }
 
+"Returns non empty follow array."
+shared JsonArray? get_follow(JsonObject user) {
+    if (is JsonArray follow = user["follow"], !follow.empty) {
+        return follow;
+    } else {
+        return null;
+    }
+}
+
+class FollowingHubless(shared String name) extends Exception(name) {}
+
+"Returns null if user is not following any one."
+throws(`class FollowingHubless`, "when user follows someone without a hub")
+HubLinks? process_follow(JsonObject user) {
+    HubLinks hubLinks = HashSet<String>();
+    if (is JsonArray follow = get_follow(user)) {
+        for (following in follow) {
+            if (is JsonObject following) {
+                if (exists hub_id = get_json_string(following, "hub")) {
+                    hubLinks.add(hub_id);
+                } else {
+                    String name;
+                    if (exists user_name = get_json_string(following, "user_name")) {
+                        name = user_name;
+                    } else {
+                        name = "null";
+                    }
+                    throw FollowingHubless(name);
+                }
+            } else {
+                return null;
+            }
+        }
+        return hubLinks;
+    } else {
+        return null;
+    }
+}
+
 "Given a **hub** site path, returns all hub IDs whose users are followed by the given **hub**."
 see(`alias HubLinks`)
 shared HubLinks crawl_links(Path hub_id_path) {
@@ -253,27 +292,15 @@ shared HubLinks crawl_links(Path hub_id_path) {
     for (user_dir in get_user_dirs(get_users_dir(hub_id_path))) {
         if (exists file = resolve_path_to_file(user_dir.childPath(data_json))) {
             if (is JsonObject user_data = load_json_object(file)) {
-                if (is JsonArray follow = user_data["follow"], !follow.empty) {
-                    for (following in follow) {
-                        if (is JsonObject following) {
-                            if (exists hub_id = get_json_string(following, "hub")) {
-                                links.add(hub_id);
-                            } else {
-                                String name;
-                                if (exists user_name = get_json_string(following, "user_name")) {
-                                    name = user_name;
-                                } else {
-                                    name = "null";
-                                }
-                                log.error(() => "``user_dir`` followed ``name`` without hub!
-                                                 Something is wrong with the data dir.");
-                            }
-                        } else {
-                            log.debug(() => "``user_dir`` is not following any one.");
-                        }
+                try {
+                    if (exists hubLinks = process_follow(user_data)) {
+                        links.addAll(hubLinks);
+                    } else {
+                        log.debug(() => "``user_dir`` is not following any one.");
                     }
-                } else {
-                    log.debug(() => "``user_dir`` is not following any one.");
+                } catch (FollowingHubless e) {
+                    log.error(() => "``user_dir`` follows ``e.name`` without `hub`!
+                                     Something is wrong with the data dir.");
                 }
             } else {
                 log.error(() => "Failed to parse `data.json` file in ``user_dir``.");
