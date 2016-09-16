@@ -41,7 +41,7 @@ Also use annotation to suppress false positive warnings.
 For example:
 
 ```ceylon
-"The utimate exception handler."
+"The ultimate exception handler."
 suppressWarnings("expressionTypeNothing")
 shared void run() {
     try {

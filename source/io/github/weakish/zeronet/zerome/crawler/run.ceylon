@@ -520,7 +520,7 @@ void main() {
     }
 }
 
-"The utimate exception handler."
+"The ultimate exception handler."
 suppressWarnings("expressionTypeNothing")
 shared void run() {
     try {
