@@ -32,9 +32,6 @@ import ceylon.test {
 import java.io {
     FileNotFoundException
 }
-import java.lang {
-    UnsupportedOperationException
-}
 
 
 String data_json = "data.json";
