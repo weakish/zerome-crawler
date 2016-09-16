@@ -42,26 +42,21 @@ shared class UsageError(String message) extends Exception(message) {
 }
 
 "Read the file whole."
-throws(`class FileNotFoundException`)
-shared String read_file(Path path) {
+shared String read_file(File file) {
     String hub_content;
-    if (is File file = path.resource) {
-        try (reader = file.Reader()) {
-            ArrayList<String> lines = ArrayList<String>();
-            while (exists line = reader.readLine()) {
-                lines.add(line);
-            }
-            hub_content = "\n".join(lines);
+    try (reader = file.Reader()) {
+        ArrayList<String> lines = ArrayList<String>();
+        while (exists line = reader.readLine()) {
+            lines.add(line);
         }
-        return hub_content;
-    } else {
-        throw FileNotFoundException(path.string);
+        hub_content = "\n".join(lines);
     }
+    return hub_content;
 }
 
 "Returns null if parsed result of file is not JsonObject."
-shared JsonObject? load_json_object(Path path) {
-    String hub_content = read_file(path);
+shared JsonObject? load_json_object(File file) {
+    String hub_content = read_file(file);
     if (is JsonObject json = parseJson(hub_content)) {
         return json;
     } else {
@@ -169,10 +164,29 @@ shared Directory? resolve_directory(Link link) {
 }
 "Resolve a link to direcotry."
 see(`function resolve_directory`)
+see(`function resolve_path_to_file`)
 shared File? resolve_file(Link link) {
     switch (resolved_link = link.linkedResource)
     case (is File) {
         return resolved_link;
+    }
+    case (is Directory|Nil) {
+        return null;
+    }
+}
+"Resolve a path to a flie."
+see(`function resolve_file`)
+shared File? resolve_path_to_file(Path path) {
+    switch (location = path.resource)
+    case (is File) {
+        return location;
+    }
+    case (is Link) {
+        if (exists file = resolve_file(location)) {
+            return file;
+        } else {
+            return null;
+        }
     }
     case (is Directory|Nil) {
         return null;
@@ -210,8 +224,8 @@ see(`alias HubLinks`)
 shared HubLinks crawl_links(Path hub_id_path) {
     HubLinks links = HashSet<String>();
     for (user_dir in get_user_dirs(get_users_dir(hub_id_path))) {
-        try {
-            if (is JsonObject user_data = load_json_object(user_dir.childPath("data.json"))) {
+        if (exists file = resolve_path_to_file(user_dir.childPath("data_json"))) {
+            if (is JsonObject user_data = load_json_object(file)) {
                 if (is JsonArray follow = user_data["follow"], !follow.empty) {
                     for (following in follow) {
                         if (is JsonObject following) {
@@ -238,7 +252,7 @@ shared HubLinks crawl_links(Path hub_id_path) {
                 log.error(() => "Failed to parse `data.json` file in ``user_dir``.");
                 log.warn(() => "There is no `data.json` file in ``user_dir``.");
             }
-        } catch(FileNotFoundException e) {
+        } else {
             // Some `user_dir` dose not have `data_json` file.
             // Probably not synced yet.
             log.warn(() => "There is no `data.json` file in ``user_dir``.");
