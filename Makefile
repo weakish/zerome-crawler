@@ -1,8 +1,8 @@
 # Compatible with GNU make and BSD make.
 
 build:
-    # `process.exit` returns `Nothing`.
-    @ceylon compile --suppress-warning=expressionTypeNothing
+	@ceylon compile --suppress-warning=expressionTypeNothing
+# `process.exit` returns `Nothing`.
 
 doc:
 	@ant doc
