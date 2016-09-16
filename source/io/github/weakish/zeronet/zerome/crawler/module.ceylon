@@ -47,9 +47,10 @@
 
    ```sh
    git init
-   java -jar zerome-crawler.jar --all -1 | xargs git add
+   java -jar zerome-crawler.jar --all -1 --seeding | xargs git add
    # `1` lists one hub_id per line. It implies `list-only`.
    git commit -m 'Auto snapshot of ZeroMe Hubs.'
+   ```
    """
 by("Jakukyo Friel")
 license("0BSD")

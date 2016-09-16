@@ -449,7 +449,7 @@ void main() {
     if (help_option == true || help_option_short == true) {
         print("""Usage:
                  java -jar zerome-crawler.jar -h|--help
-                                              --all [--list-only] [-1] [--data_dir PATH] [--user_registry ID]
+                                              --all [--list-only] [-1 [--seeding]] [--data_dir PATH] [--user_registry ID]
                                               [-r] [--hub ID] [--data_dir PATH]""");
     } else {
         // --data_dir
@@ -481,6 +481,8 @@ void main() {
         Boolean list_only = process.namedArgumentPresent("list-only");
         // -1
         Boolean one_pre_line = process.namedArgumentPresent("1");
+        // --seeding
+        Boolean seeding = process.namedArgumentPresent("seeding");
         // --user_registry
         String zerome_user_registry = "1UDbADib99KE9d3qZ87NqJF2QLTHmMkoV";
         if (process.namedArgumentPresent("user_registry") == true) {
@@ -498,13 +500,23 @@ void main() {
         } else {
             throw FileNotFoundException("data_dir ``data_dir_path`` not found.");
         }
-        // output in json
+        // output
         switch (all)
         case (true) {
             switch (one_pre_line)
             case (true) {
                 for (hub_link in crawl_all(data_dir, user_registry, true)) {
-                    print(hub_link);
+                    assert (is String hub_link);
+                    switch(seeding)
+                    case(true) {
+                        Path hub_path = data_dir.path.childPath(hub_link);
+                        if (exists directory = resolve_path_to_directory(hub_path)) {
+                            print(hub_link);
+                        }
+                    }
+                    case (false) {
+                        print(hub_link);
+                    }
                 }
             }
             case (false) {
