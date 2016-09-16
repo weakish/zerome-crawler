@@ -20,7 +20,8 @@ import ceylon.logging {
     Logger,
     addLogWriter,
     writeSimpleLog,
-    // defaultPriority,
+//    debug,
+//    defaultPriority,
     logger
 }
 import ceylon.test {
@@ -34,6 +35,10 @@ import java.io {
 import java.lang {
     UnsupportedOperationException
 }
+
+
+String data_json = "data.json";
+String content_json = "content.json";
 
 "Command line usage error, e.g. missing argument for option."
 shared class UsageError(String message) extends Exception(message) {
@@ -236,16 +241,17 @@ Directory get_users_dir(Path hub_id_path) {
     }
 }
 
-"Returns {hub_id/data/users/user_id ...}"
+"Returns {.../user_id/, ...}"
 {Path*} get_user_dirs(Directory users_dir) {
     return users_dir.childPaths().filter((path) => path.resource is Directory);
 }
+
 "Given a **hub** site path, returns all hub IDs whose users are followed by the given **hub**."
 see(`alias HubLinks`)
 shared HubLinks crawl_links(Path hub_id_path) {
     HubLinks links = HashSet<String>();
     for (user_dir in get_user_dirs(get_users_dir(hub_id_path))) {
-        if (exists file = resolve_path_to_file(user_dir.childPath("data_json"))) {
+        if (exists file = resolve_path_to_file(user_dir.childPath(data_json))) {
             if (is JsonObject user_data = load_json_object(file)) {
                 if (is JsonArray follow = user_data["follow"], !follow.empty) {
                     for (following in follow) {
@@ -263,15 +269,14 @@ shared HubLinks crawl_links(Path hub_id_path) {
                                                  Something is wrong with the data dir.");
                             }
                         } else {
-                            log.info(() => "``user_dir`` is not following any one.");
+                            log.debug(() => "``user_dir`` is not following any one.");
                         }
                     }
                 } else {
-                    log.info(() => "``user_dir`` is not following any one.");
+                    log.debug(() => "``user_dir`` is not following any one.");
                 }
             } else {
                 log.error(() => "Failed to parse `data.json` file in ``user_dir``.");
-                log.warn(() => "There is no `data.json` file in ``user_dir``.");
             }
         } else {
             // Some `user_dir` dose not have `data_json` file.
@@ -284,9 +289,9 @@ shared HubLinks crawl_links(Path hub_id_path) {
 
 "Gluing code or the real entry point.
  Returns Null when `hub` is not seeded or fail to parse content.json of `hub`."
-shared Hub|Hubs|Null crawl(String hub_id, Directory data_dir, Boolean recursive) {
+shared Hub|Hubs|Null crawl(String hub_id, Directory data_dir, Boolean recursive = false) {
     Path hub_id_path = data_dir.path.childPath(hub_id);
-    Path hub_content_json_path = hub_id_path.childPath("content.json");
+    Path hub_content_json_path = hub_id_path.childPath(content_json);
     if (exists content_json_file = resolve_path_to_file(hub_content_json_path)) {
         if (is JsonObject content_json = load_json_object(content_json_file)) {
             HubMeta hubMeta = meta(content_json);
@@ -312,23 +317,101 @@ shared Hub|Hubs|Null crawl(String hub_id, Directory data_dir, Boolean recursive)
 Logger log = logger(`module io.github.weakish.zeronet.zerome.crawler`);
 
 "Returns JsonObject for [[Hub]] and JsonArray of JsonObject for [[Hubs]]."
-shared JsonArray|JsonObject jsonify(Hubs|Hub|Null hub) {
-    switch (hub)
-    case (is Hub) {
-        return JsonObject {
-                "address" -> hub.key,
-                "title" -> hub.item[0]["title"],
-                "description" -> hub.item[0]["description"],
-                "zeronet_version" -> hub.item[0]["zeronet_version"],
-                "links" -> JsonArray(hub.item[1])
+shared JsonArray|JsonObject jsonify(Hubs|Hub|HubLinks|Null hub) {
+    // Nest switch in if-else
+    // because `HubLinks`(interface based) and `Hubs` (class based) are not disjoint.
+    if (is HubLinks hub) {
+        JsonArray json = JsonArray();
+        json.addAll(hub);
+        return json;
+    } else {
+        switch (hub)
+        case (is Hub) {
+            return JsonObject {
+                    "address" -> hub.key,
+                    "title" -> hub.item[0]["title"],
+                    "description" -> hub.item[0]["description"],
+                    "zeronet_version" -> hub.item[0]["zeronet_version"],
+                    "links" -> JsonArray(hub.item[1])
+            };
+        }
+        case (is Hubs) {
+            return JsonArray([for (_hub in hub) jsonify(_hub)]);
+        }
+        case (is Null) {
+            return JsonObject {};
+        }
+    }
+}
+
+"Returns `data/REGISTRY_ID/data/userdb/`."
+throws(`class FileNotFoundException`, "if directory not found")
+shared Directory get_userdb_dir(Directory data_dir, String user_registry) {
+    Path user_registry_path = data_dir.path.childPath(user_registry);
+    Path user_db_path = user_registry_path.childPath("data").childPath("userdb");
+    if (exists directory = resolve_path_to_directory(user_db_path)) {
+        return directory;
+    } else {
+        throw FileNotFoundException("``data_dir.path.string``/``user_registry``/data/userdb/");
+    }
+}
+
+"Returns
+     - [[HubLinks]] when `list_only` is true;
+     - {[[Hub]]*} when `list_only` is false."
+shared HubLinks|Hubs crawl_all(Directory data_dir, String user_registry, Boolean list_only) {
+    HubLinks hubLinks = crawl_all_hubs(data_dir, user_registry);
+    switch (list_only)
+    case (true) {
+        return hubLinks;
+    }
+    case (false) {
+        {Hub*} hubs = {
+            for (link in hubLinks)
+                if (is Hub hub = crawl(link, data_dir, false))
+                    hub
         };
+        return set(hubs);
     }
-    case (is Hubs) {
-        return JsonArray([for (_hub in hub) jsonify(_hub)]);
+}
+
+"Returns null under following conditions:
+     - no `user` array,
+     - `user` is empty,
+     - `user` has more than one users,
+     - failed to parse `user[0]` as Json Object."
+String? get_hub_from_user(JsonObject user_data) {
+    if (is JsonArray user = user_data["user"],
+        !user.empty,
+        user.size == 1, // I guess currently ZeroMe does not support multiple users account.
+        is JsonObject first_user = user.first) {
+        return get_json_string(first_user, "hub");
+    } else {
+        return null;
     }
-    case (is Null) {
-        return JsonObject {};
+}
+
+"Crawl zerome user register for hubs."
+shared HubLinks crawl_all_hubs(Directory data_dir, String user_registry) {
+    HubLinks hubLinks = HashSet<String>();
+    for (user in get_user_dirs(get_userdb_dir(data_dir, user_registry))) {
+        if (exists file = resolve_path_to_file(user.childPath(content_json))) {
+            if (is JsonObject user_data = load_json_object(file)) {
+                if (exists hub = get_hub_from_user(user_data)) {
+                    hubLinks.add(hub);
+                } else {
+                    log.warn("Failed to get hub from ``user``
+                              This may be caused by broken manual migration.");
+                }
+            } else {
+                log.error(() => "Failed to parse `data.json` file in ``user``.");
+            }
+        } else {
+            log.warn(() => "There is no `content.json` file in ``user``.
+                            Probably it has not been synced yet.");
+        }
     }
+    return hubLinks;
 }
 
 "The entrypoint for command line."
@@ -336,13 +419,19 @@ throws(`class UsageError`, "when option speciefd without an argument value`")
 void main() {
     addLogWriter(writeSimpleLog);
     // DEBUG
-    // defaultPriority = debug;
+//    defaultPriority = debug;
 
     Path data_dir_path;
     String hub_id;
+    String user_registry;
 
-    if (process.namedArgumentPresent("h") == true) {
-        print("""Usage: java -jar zerome-crawler.jar [-h] [-r] [--data_dir PATH] [--hub ID]""");
+    // -h/--help
+    Boolean help_option = process.namedArgumentPresent("help");
+    Boolean help_option_short = process.namedArgumentPresent("h");
+    if (help_option == true || help_option_short == true) {
+        print("""Usage: java -jar zerome-crawler.jar -h|--help
+                                                     --all [--list-only] [--data_dir PATH] [--user_registry ID]
+                                                     [-r] [--hub ID] [--data_dir PATH]""");
     } else {
         // --data_dir
         if (process.namedArgumentPresent("data_dir") == true) {
@@ -354,6 +443,8 @@ void main() {
         } else {
             data_dir_path = current;
         }
+        // -r
+        Boolean recursive = process.namedArgumentPresent("r");
         // --hub
         if (process.namedArgumentPresent("hub") == true) {
             if (exists hub_argument = process.namedArgumentValue("hub")) {
@@ -365,9 +456,21 @@ void main() {
             String redhub = "1RedkCkVaXuVXrqCMpoXQS29bwaqsuFdL";
             hub_id = redhub;
         }
-        // -r
-        Boolean recursive = process.namedArgumentPresent("r");
-
+        // --all
+        Boolean all = process.namedArgumentPresent("all");
+        // -l
+        Boolean list_only = process.namedArgumentPresent("list-only");
+        // --user_registry
+        String zerome_user_registry = "1UDbADib99KE9d3qZ87NqJF2QLTHmMkoV";
+        if (process.namedArgumentPresent("user_registry") == true) {
+            if (exists registry_argument = process.namedArgumentValue("user_registry")) {
+                user_registry = registry_argument;
+            } else {
+                user_registry = zerome_user_registry;
+            }
+        } else {
+            user_registry = zerome_user_registry;
+        }
         Directory data_dir;
         if (exists directory = resolve_path_to_directory(data_dir_path)) {
             data_dir = directory;
@@ -375,7 +478,13 @@ void main() {
             throw FileNotFoundException("data_dir ``data_dir_path`` not found.");
         }
         // output in json
-        print(jsonify(crawl(hub_id, data_dir, recursive)));
+        switch (all)
+        case (true) {
+            print(jsonify(crawl_all(data_dir, user_registry, list_only)));
+        }
+        case (false) {
+            print(jsonify(crawl(hub_id, data_dir, recursive)));
+        }
     }
 }
 

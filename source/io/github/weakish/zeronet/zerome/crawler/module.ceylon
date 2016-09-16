@@ -22,11 +22,28 @@
    `Hub` is an `Entry`, and `Hubs` is a `Set<Hub>`,
    for accurate definition, see the aliases section below.
 
-   This module can also be used as a command line tool:
+   This module can also be used as a command line tool.
 
-       java -jar zerome-crawler.jar [-h] [-r] [--data_dir PATH] [--hub ID]"
+   For example, assuming current directory is ZeroNet `data` direcotry,
+   crawl RedHub:
+
+   ```sh
+   java -jar zerome-crawler.jar --hub 1RedkCkVaXuVXrqCMpoXQS29bwaqsuFdL
+   ```
+
+   List all hubs where at least one user has registered.
+
+   ```sh
+   java -jar zerome-crawler.jar --all --list-only
+   ```
+
+   Crawl all hubs, the data dir is `/var/zeronet/data`:
+
+   ```sh
+   java -jar zerome-crawler.jar --all --data_dir /var/zeronet/data
+   ```
    """
-by("Jakukyo Friel <weakish@gamil.com")
+by("Jakukyo Friel")
 license("0BSD")
 native ("jvm")
 module io.github.weakish.zeronet.zerome.crawler "0.0.0" {
